@@ -74,11 +74,10 @@ class DBContainer:
         attempts = 1
 
         while True:
-            try:
-                if self.is_connected():
-                    print("Database connected")
-                    break
-            except subprocess.CalledProcessError:
+            if self.is_connected():
+                print("Database connected")
+                break
+            else:
                 print(f"Database unavailable, waiting 1 second... (attempt {attempts})")
                 time.sleep(1)
                 attempts += 1
