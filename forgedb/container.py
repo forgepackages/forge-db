@@ -84,22 +84,13 @@ class DBContainer:
                 attempts += 1
 
     def is_connected(self):
-        # TODO Use django ensure_connection instead?
-        try:
-            subprocess.check_output(
-                [
-                    "docker",
-                    "exec",
-                    self.name,
-                    "pg_isready",
-                    "-U",
-                    self.postgres_user,
-                ],
-                stderr=subprocess.PIPE,
-            )
-            return True
-        except subprocess.CalledProcessError:
-            return False
+        result = Forge().manage_cmd(
+            "showmigrations",
+            "--skip-checks",
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        return result.returncode == 0
 
     def logs(self):
         subprocess.check_call(
