@@ -1,6 +1,7 @@
 import os
 import re
 import subprocess
+import time
 
 import dj_database_url
 from forgecore import Forge
@@ -67,6 +68,38 @@ class DBContainer:
             if "No such container" not in e.stderr.decode():
                 print(e.stderr.decode())
                 raise
+
+    def wait(self):
+        print("Waiting for database...")
+        attempts = 1
+
+        while True:
+            try:
+                if self.is_connected():
+                    print("Database connected")
+                    break
+            except subprocess.CalledProcessError:
+                print(f"Database unavailable, waiting 1 second... (attempt {attempts})")
+                time.sleep(1)
+                attempts += 1
+
+    def is_connected(self):
+        # TODO Use django ensure_connection instead?
+        try:
+            subprocess.check_output(
+                [
+                    "docker",
+                    "exec",
+                    self.name,
+                    "pg_isready",
+                    "-U",
+                    self.postgres_user,
+                ],
+                stderr=subprocess.PIPE,
+            )
+            return True
+        except subprocess.CalledProcessError:
+            return False
 
     def logs(self):
         subprocess.check_call(
